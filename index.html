@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GROK AI - MAX CHIẾN</title>
+  <style>
+      :root{--primary:#10a37f;--glow:rgba(16,163,127,0.5);}
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  height:100vh;
+  background:#000;
+  color:#fff;
+  font-family:'Segoe UI',system-ui,sans-serif;
+  overflow:hidden;
+  background:radial-gradient(circle at 50% 50%,#0a1a1f,#000 70%);
+}
+
+/* --- Hiệu ứng nền --- */
+.bg-animation{
+  position:fixed;inset:0;z-index:1;
+  background:
+    linear-gradient(45deg,transparent 49%,rgba(16,163,127,0.08)50%,transparent 51%),
+    linear-gradient(-45deg,transparent 49%,rgba(16,163,127,0.08)50%,transparent 51%),
+    repeating-linear-gradient(0deg,#000 0px,#000 20px,rgba(16,163,127,0.03)20px,rgba(16,163,127,0.03)40px),
+    repeating-linear-gradient(90deg,#000 0px,#000 20px,rgba(16,163,127,0.03)20px,rgba(16,163,127,0.03)40px);
+  background-size:100% 100%;
+  animation:scan 14s linear infinite;
+}
+
+/* --- Container chính: nhỏ gọn hơn --- */
+.container{
+  position:relative;z-index:10;
+  height:100vh;
+  max-width:720px;            /* nhỏ lại giống ChatGPT hơn */
+  width:100%;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+}
+
+/* --- Header --- */
+.header{
+  padding:18px 0;
+  text-align:center;
+  font-size:26px;
+  font-weight:800;
+  background:linear-gradient(90deg,#10a37f,#00ffaa,#10a37f);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  text-shadow:0 0 22px var(--glow);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.header svg{
+  width:36px;height:36px;
+  filter:drop-shadow(0 0 12px var(--glow));
+  animation:pulse 3s infinite;
+}
+
+/* --- Messages --- */
+#messages{
+  flex:1;
+  overflow-y:auto;
+  padding:20px 16px 10px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;                    /* khoảng cách gọn hơn */
+  scrollbar-width:none;
+}
+#messages::-webkit-scrollbar{display:none;}
+
+.message{
+  display:flex;
+  gap:12px;
+  max-width:90%;
+  opacity:0;
+  animation:slideUp .6s ease forwards;
+}
+
+.message.user{
+  align-self:flex-end;
+  flex-direction:row-reverse;
+}
+
+/* --- Avatar --- */
+.avatar{
+  width:36px;height:36px;
+  border-radius:50%;
+  border:2px solid var(--primary);
+  box-shadow:0 0 20px var(--glow);
+  position:relative;
+  overflow:hidden;
+}
+.avatar svg{
+  position:absolute;
+  inset:4px;
+  fill:#10a37f;
+}
+
+.user .avatar{
+  border-color:#00ffff;
+  box-shadow:0 0 20px #00ffff;
+}
+.user .avatar svg{
+  fill:#00ffff;
+}
+
+/* --- Bubbles --- */
+.bubble{
+  padding:12px 18px;
+  border-radius:16px;
+  font-size:16px;
+  line-height:1.55;
+  background:rgba(30,40,50,0.9);
+  border:1px solid rgba(16,163,127,0.25);
+  box-shadow:0 5px 18px rgba(0,0,0,0.6);
+}
+
+.user .bubble{
+  background:linear-gradient(135deg,#1976d2,#005bbb);
+  box-shadow:0 5px 18px rgba(0,0,0,0.6),0 0 16px rgba(0,255,255,0.25);
+}
+
+/* --- Input box --- */
+.input-area{
+  padding:12px 16px 20px;
+}
+
+.input-box{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  background:rgba(15,25,35,0.95);
+  border-radius:26px;
+  padding:12px 16px;
+  border:2px solid rgba(16,163,127,0.35);
+  box-shadow:0 6px 22px rgba(0,0,0,0.7);
+  transition:all .25s;
+}
+
+.input-box:focus-within{
+  border-color:var(--primary);
+  box-shadow:0 0 0 4px var(--glow),0 10px 30px rgba(0,0,0,0.8);
+}
+
+#input{
+  flex:1;
+  background:none;
+  border:none;
+  outline:none;
+  color:#fff;
+  font-size:16px;
+}
+
+#send-btn{
+  width:44px;height:44px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),#00ffaa);
+  border:none;
+  cursor:pointer;
+  box-shadow:0 0 24px var(--glow);
+  transition:all .25s;
+}
+#send-btn:hover{transform:scale(1.12);}
+#send-btn:active{transform:scale(0.95);}
+
+    .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,0.6);
+      transform:scale(0);animation:ripple .7s ease-out;pointer-events:none;}
+    @keyframes ripple{to{transform:scale(4);opacity:0}}
+    @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+    @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+  </style>
+</head>
+<body>
+
+<div class="bg-animation"></div>
+<canvas class="matrix" id="matrix"></canvas>
+
+<div class="container">
+  <div class="header">
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="none" stroke="#10a37f" stroke-width="6"/>
+      <path d="M30 42 Q50 18 70 42 Q50 80 30 42" fill="none" stroke="#10a37f" stroke-width="8"/>
+      <circle cx="37" cy="42" r="8" fill="#10a37f"/>
+      <circle cx="63" cy="42" r="8" fill="#10a37f"/>
+    </svg>
+    GROK AI MAX
+  </div>
+
+  <div id="messages">
+    <div class="message ai">
+      <div class="avatar">
+        <svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      </div>
+      <div class="bubble">
+        <strong>ĐÃ KÍCH HOẠT CHẾ ĐỘ CHIẾN MẠNH!</strong><br>
+        Hỏi gì cũng được, mình trả lời hết – không sợ gì cả
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-box">
+      <input type="text" id="input" placeholder="Nhập lệnh chiến đấu..." autocomplete="off" autofocus>
+      <button id="send-btn">
+        <svg viewBox="0 0 24 24" width="32" height="32">
+          <path fill="white" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script>
+  // Matrix rain effect
+  const canvas = document.getElementById('matrix');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const letters = '01010101010101010101010101011';
+  const fontSize = 14;
+  const columns = canvas.width/fontSize;
+  const drops = Array(Math.floor(columns)).fill(1);
+  function draw(){
+    ctx.fillStyle = 'rgba(0,0,0,0.05)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#10a37f';
+    ctx.font = fontSize + 'px monospace';
+    for(let i=0;i<drops.length;i++){
+      const text = letters[Math.floor(Math.random()*letters.length)];
+      ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+      if(drops[i]*fontSize > canvas.height && Math.random()>0.975) drops[i]=0;
+      drops[i]++;
+    }
+  }
+  setInterval(draw,35);
+  window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
+
+  // Chat logic
+  const input=document.getElementById("input");
+  const sendBtn=document.getElementById("send-btn");
+  const messages=document.getElementById("messages");
+
+  input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
+  sendBtn.addEventListener("click",function(e){
+    const rect=this.getBoundingClientRect();
+    const ripple=document.createElement("span");
+    const size=100;
+    const x=e.clientX-rect.left-size/2;
+    const y=e.clientY-rect.top-size/2;
+    ripple.classList.add("ripple");
+    ripple.style.width=ripple.style.height=size+"px";
+    ripple.style.left=x+"px";ripple.style.top=y+"px";
+    this.appendChild(ripple);
+    setTimeout(()=>ripple.remove(),800);
+    send();
+  });
+
+  async function send(){
+    const text=input.value.trim();
+    if(!text) return;
+    addMessage("user",text);
+    input.value="";sendBtn.disabled=true;
+    const typing=addMessage("ai","<span style='color:#10a37f'>█</span> Đang xử lý...");
+    try{
+      const res=await fetch("https://tfqd2.vercel.app/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:text})});
+      const data=await res.json();
+      typing.remove();
+      addMessage("ai",(data.reply||"Không có phản hồi").replace(/\n/g,"<br>"));
+    }catch{
+      typing.remove();
+      addMessage("ai","<span style='color:#ff0066'>LỖI KẾT NỐI!</span>");
+    }finally{sendBtn.disabled=false;input.focus();}
+  }
+
+  function addMessage(sender,text){
+    const div=document.createElement("div");
+    div.className=`message ${sender}`;
+    div.innerHTML=`
+      <div class="avatar">
+        ${sender==="ai"?
+          `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`:
+          `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`
+        }
+      </div>
+      <div class="bubble">${text}</div>
+    `;
+    messages.appendChild(div);
+    messages.scrollTop=messages.scrollHeight;
+    return div;
+  }
+</script>
+</body>
+</html>
